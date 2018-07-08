@@ -185,7 +185,7 @@ func main() {
 				saveFrames := percent && ext != ".gif"
 				saveFrames = saveFrames && frame%Nth == 0
 				last := j == len(Configs)-1 && i == config.Count-1
-				if saveFrames || last || model.Score >= Max {
+				if saveFrames || last || model.Score <= Max {
 					path := output
 					if percent {
 						path = fmt.Sprintf(output, frame)
