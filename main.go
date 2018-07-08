@@ -177,9 +177,7 @@ func main() {
 			nps := primitive.NumberString(float64(n) / time.Since(t).Seconds())
 			elapsed := time.Since(start).Seconds()
 
-			rfs = 100 - (model.Score / basescore * 100)
-
-			primitive.Log(1, "%d: t=%.3f, score=%.6f, n=%d, n/s=%s, b-s=%.3f\n", frame, elapsed, model.Score, n, nps, rfs)
+			primitive.Log(1, "%d: t=%.3f, score=%.6f, n=%d, n/s=%s\n", frame, elapsed, model.Score, n, nps)
 
 			// write output image(s)
 			for _, output := range Outputs {
@@ -188,7 +186,7 @@ func main() {
 				saveFrames := percent && ext != ".gif"
 				saveFrames = saveFrames && frame%Nth == 0
 				last := j == len(Configs)-1 && i == config.Count-1
-				if saveFrames || last || rfs >= Max {
+				if saveFrames || last || model.Score >= Max {
 					path := output
 					if percent {
 						path = fmt.Sprintf(output, frame)
@@ -207,7 +205,7 @@ func main() {
 						frames := model.Frames(0.001)
 						check(primitive.SaveGIFImageMagick(path, frames, 50, 250))
 					}
-					if rfs >= Max {
+					if model.Score <= Max {
 						return
 					}
 				}
