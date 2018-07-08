@@ -118,14 +118,14 @@ func (model *Model) Add(shape Shape, alpha int) {
 
 func (model *Model) Step(shapeType ShapeType, alpha, repeat int) int {
 	//state := model.runWorkers(shapeType, alpha, 1000, 100, 16)
-	state := model.runWorkers(shapeType, alpha, 64, 16, 8)
-	state = HillClimb(state, 20).(*State)
+	state := model.runWorkers(shapeType, alpha, 500, 50, 8)
+	state = HillClimb(state, 50).(*State)
 	model.Add(state.Shape, state.Alpha)
 
 	for i := 0; i < repeat; i++ {
 		state.Worker.Init(model.Current, model.Score)
 		a := state.Energy()
-		state = HillClimb(state, 10).(*State)
+		state = HillClimb(state, 50).(*State)
 		//state = HillClimb(state, 100).(*State)
 		b := state.Energy()
 		if a == b {
