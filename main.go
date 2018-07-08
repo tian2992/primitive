@@ -160,7 +160,6 @@ func main() {
 	// run algorithm
 	model := primitive.NewModel(input, bg, OutputSize, Workers)
 	primitive.Log(1, "%d: t=%.3f, score=%.6f\n", 0, 0.0, model.Score)
-	var basescore float64 = model.Score
 
 	start := time.Now()
 	frame := 0
