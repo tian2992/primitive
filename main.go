@@ -28,6 +28,7 @@ var (
 	Mode       int
 	Workers    int
 	Max        float64
+	Maxpct     float64
 	rfs        float64
 	Nth        int
 	Repeat     int
@@ -71,11 +72,12 @@ func init() {
 	flag.Var(&Configs, "n", "number of primitives")
 	flag.StringVar(&Background, "bg", "", "background color (hex)")
 	flag.IntVar(&Alpha, "a", 128, "alpha value")
-	flag.IntVar(&InputSize, "r", 256, "resize large input images to this size")
+	flag.IntVar(&InputSize, "r", 256, "resize large input images to this size only if larger than specified")
 	flag.IntVar(&OutputSize, "s", 1024, "output image size")
 	flag.IntVar(&Mode, "m", 1, "0=combo 1=triangle 2=rect 3=ellipse 4=circle 5=rotatedrect 6=beziers 7=rotatedellipse 8=polygon")
 	flag.IntVar(&Workers, "j", 0, "number of parallel workers (default uses all cores)")
 	flag.Float64Var(&Max, "ma", 0, "target score to stop adding primitives (default 0)")
+	flag.Float64Var(&Maxpct, "mp", 0, "target score in % to stop adding primitives (default 100)")
 	flag.IntVar(&Nth, "nth", 1, "save every Nth frame (put \"%d\" in path)")
 	flag.IntVar(&Repeat, "rep", 0, "add N extra shapes per iteration with reduced search")
 	flag.BoolVar(&V, "v", false, "verbose")
@@ -158,8 +160,12 @@ func main() {
 	}
 
 	// run algorithm
+	var startScore float64
+
 	model := primitive.NewModel(input, bg, OutputSize, Workers)
 	primitive.Log(1, "%d: t=%.3f, score=%.6f\n", 0, 0.0, model.Score)
+
+	startScore = model.Score
 
 	start := time.Now()
 	frame := 0
@@ -176,7 +182,10 @@ func main() {
 			nps := primitive.NumberString(float64(n) / time.Since(t).Seconds())
 			elapsed := time.Since(start).Seconds()
 
-			primitive.Log(1, "%d: t=%.3f, score=%.6f, n=%d, n/s=%s\n", frame, elapsed, model.Score, n, nps)
+			var pctScore float64
+			pctScore = 100 - (model.Score / startScore * 100)
+
+			primitive.Log(1, "%d: t=%.3f, score=%.6f, n=%d, n/s=%s, percent score=%.3f%%\n", frame, elapsed, model.Score, n, nps, pctScore)
 
 			// write output image(s)
 			for _, output := range Outputs {
@@ -185,7 +194,7 @@ func main() {
 				saveFrames := percent && ext != ".gif"
 				saveFrames = saveFrames && frame%Nth == 0
 				last := j == len(Configs)-1 && i == config.Count-1
-				if saveFrames || last || model.Score <= Max {
+				if saveFrames || last || model.Score <= Max || pctScore >= Maxpct {
 					path := output
 					if percent {
 						path = fmt.Sprintf(output, frame)
@@ -204,7 +213,7 @@ func main() {
 						frames := model.Frames(0.001)
 						check(primitive.SaveGIFImageMagick(path, frames, 50, 250))
 					}
-					if model.Score <= Max {
+					if model.Score <= Max || pctScore >= Maxpct {
 						return
 					}
 				}

@@ -67,7 +67,8 @@ func (q *Quadratic) Mutate() {
 			q.X3 = clamp(q.X3+rnd.NormFloat64()*16, -m, float64(w-1+m))
 			q.Y3 = clamp(q.Y3+rnd.NormFloat64()*16, -m, float64(h-1+m))
 		case 3:
-			q.Width = clamp(q.Width+rnd.NormFloat64(), 1, 16)
+			q.Width = clamp(q.Width+rnd.NormFloat64(), 0.5, 128)
+			//q.Width = clamp(rnd.NormFloat64(), 0.5, 64)
 		}
 		if q.Valid() {
 			break
