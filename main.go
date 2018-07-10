@@ -213,10 +213,10 @@ func main() {
 						frames := model.Frames(0.001)
 						check(primitive.SaveGIFImageMagick(path, frames, 50, 250))
 					}
-					if model.Score <= Max || pctScore >= Maxpct {
-						return
-					}
 				}
+			}
+			if model.Score <= Max || pctScore >= Maxpct {
+				return
 			}
 		}
 	}
