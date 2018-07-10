@@ -2,7 +2,7 @@
 
 Reproducing images with geometric primitives. Test
 
-![Example](https://www.michaelfogleman.com/static/primitive/examples/16550611738.200.128.4.5.png)
+![Example]()
 
 ### How it Works
 
@@ -27,7 +27,7 @@ You can tweet a picture to the bot and it will process it for you.
 
 Run it on your own images! First, [install Go](https://golang.org/doc/install).
 
-    go get -u github.com/fogleman/primitive
+    go get -u github.com/bmaltais/primitive
     primitive -i input.png -o output.png -n 100
 
 Small input images should be used (like 256x256px). You don't need the detail anyway and the code will run faster.
