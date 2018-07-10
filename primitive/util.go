@@ -91,7 +91,13 @@ func SaveGIFImageMagick(path string, frames []image.Image, delay, lastDelay int)
 		filepath.Join(dir, fmt.Sprintf("%06d.png", len(frames)-1)),
 		path,
 	}
-	cmd := exec.Command("convert", args...)
+	
+	if runtime.GOOS == "windows" {
+		fmt.Println("Hello from Windows")
+		cmd := exec.Command("magick convert", args...)
+	} else {
+		cmd := exec.Command("convert", args...)
+	}
 	if err := cmd.Run(); err != nil {
 		return err
 	}
