@@ -77,7 +77,7 @@ func init() {
 	flag.IntVar(&Mode, "m", 1, "0=combo 1=triangle 2=rect 3=ellipse 4=circle 5=rotatedrect 6=beziers 7=rotatedellipse 8=polygon")
 	flag.IntVar(&Workers, "j", 0, "number of parallel workers (default uses all cores)")
 	flag.Float64Var(&Max, "ma", 0, "target score to stop adding primitives (default 0)")
-	flag.Float64Var(&Maxpct, "mp", 0, "target score in % to stop adding primitives (default 100)")
+	flag.Float64Var(&Maxpct, "mp", 100, "target score in % to stop adding primitives (default 100)")
 	flag.IntVar(&Nth, "nth", 1, "save every Nth frame (put \"%d\" in path)")
 	flag.IntVar(&Repeat, "rep", 0, "add N extra shapes per iteration with reduced search")
 	flag.BoolVar(&V, "v", false, "verbose")
