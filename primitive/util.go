@@ -14,7 +14,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 )
 
 func LoadImage(path string) (image.Image, error) {
@@ -84,39 +83,23 @@ func SaveGIFImageMagick(path string, frames []image.Image, delay, lastDelay int)
 		path := filepath.Join(dir, fmt.Sprintf("%06d.png", i))
 		SavePNG(path, im)
 	}
-	
-	if runtime.GOOS == "windows" {
-		fmt.Println("Hello from Windows")
-		argsw := []string{
-			"-loop", "0",
-			"-delay", fmt.Sprint(delay),
-			filepath.Join(dir, "*.png"),
-			"-delay", fmt.Sprint(lastDelay - delay),
-			filepath.Join(dir, fmt.Sprintf("%06d.png", len(frames)-1)),
-			path,
-		}
-		cmd := exec.Command("magick", argsw...)
-
-		if err := cmd.Run(); err != nil {
-			return err
-		}
-	} else {
-		argsl := []string{
-			"-loop", "0",
-			"-delay", fmt.Sprint(delay),
-			filepath.Join(dir, "*.png"),
-			"-delay", fmt.Sprint(lastDelay - delay),
-			filepath.Join(dir, fmt.Sprintf("%06d.png", len(frames)-1)),
-			path,
-		}
-
-		cmd := exec.Command("convert", argsl...)
-
-		if err := cmd.Run(); err != nil {
-			return err
-		}
+	args := []string{
+		"-loop", "0",
+		"-delay", fmt.Sprint(delay),
+		filepath.Join(dir, "*.png"),
+		"-delay", fmt.Sprint(lastDelay - delay),
+		filepath.Join(dir, fmt.Sprintf("%06d.png", len(frames)-1)),
+		path,
 	}
-
+	var cmd *exec.Cmd
+	if _, err := exec.LookPath("magick"); err == nil {
+		cmd = exec.Command("magick", append([]string{"convert"}, args...)...)
+	} else {
+		cmd = exec.Command("convert", args...)
+	}
+	if err := cmd.Run(); err != nil {
+		return err
+	}
 	return os.RemoveAll(dir)
 }
 
