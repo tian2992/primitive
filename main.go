@@ -34,6 +34,7 @@ var (
 	Nth          int
 	Repeat       int
 	V, VV        bool
+	Interval     int
 )
 
 type flagArray []string
@@ -78,6 +79,7 @@ func init() {
 	flag.IntVar(&OutputSize, "s", 1024, "output image size")
 	flag.IntVar(&Mode, "m", 1, "0=combo 1=triangle 2=rect 3=ellipse 4=circle 5=rotatedrect 6=beziers 7=rotatedellipse 8=polygon")
 	flag.Float64Var(&MaxQuadWidth, "mqw", 0.5, "maximum size of quadratic lines")
+	flag.IntVar(&Interval, "int", 50, "interval between frame in a gif")
 	flag.IntVar(&Workers, "j", 0, "number of parallel workers (default uses all cores)")
 	flag.Float64Var(&Max, "ma", 0, "target score to stop adding primitives (default 0)")
 	flag.Float64Var(&Maxpct, "mp", 100, "target score in % to stop adding primitives (default 100)")
@@ -121,6 +123,9 @@ func main() {
 		if config.Count < 1 {
 			ok = errorMessage("ERROR: number argument must be > 0")
 		}
+	}
+	if Interval < 0 {
+		ok = errorMessage("ERROR: negative frame interval not accepted")
 	}
 	if !ok {
 		fmt.Println("Usage: primitive [OPTIONS] -i input -o output -n count")
@@ -215,7 +220,7 @@ func main() {
 						check(primitive.SaveFile(path, model.SVG()))
 					case ".gif":
 						frames := model.Frames(0.001)
-						check(primitive.SaveGIFImageMagick(path, frames, 50, 250))
+						check(primitive.SaveGIFImageMagick(path, frames, Interval, 250))
 					}
 				}
 			}

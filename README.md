@@ -41,6 +41,7 @@ Small input images should be used (like 256x256px). You don't need the detail an
 | `mqw` | 0.5 | maximum size of quadratic lines |
 | `rep` | 0 | add N extra shapes each iteration with reduced search (mostly good for beziers) |
 | `nth` | 1 | save every Nth frame (only when `%d` is in output path) |
+| `int` | 50 | interval between frame in a gif in millis (works only with .gif output)|
 | `r` | 256 | resize large input images to this size before processing |
 | `s` | 1024 | output image size |
 | `a` | 128 | color alpha (use `0` to let the algorithm choose alpha for each shape) |
