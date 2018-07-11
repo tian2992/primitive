@@ -53,11 +53,11 @@ func (worker *Worker) Energy(shape Shape, alpha int) float64 {
 	return differencePartial(worker.Target, worker.Current, worker.Buffer, worker.Score, lines)
 }
 
-func (worker *Worker) BestHillClimbState(t ShapeType, a, n, age, m int) *State {
+func (worker *Worker) BestHillClimbState(t ShapeType, a, n, age, m int, maxQuadWidth float64) *State {
 	var bestEnergy float64
 	var bestState *State
 	for i := 0; i < m; i++ {
-		state := worker.BestRandomState(t, a, n)
+		state := worker.BestRandomState(t, a, n, maxQuadWidth)
 		before := state.Energy()
 		state = HillClimb(state, age).(*State)
 		energy := state.Energy()
@@ -70,11 +70,11 @@ func (worker *Worker) BestHillClimbState(t ShapeType, a, n, age, m int) *State {
 	return bestState
 }
 
-func (worker *Worker) BestRandomState(t ShapeType, a, n int) *State {
+func (worker *Worker) BestRandomState(t ShapeType, a, n int, maxQuadWidth float64) *State {
 	var bestEnergy float64
 	var bestState *State
 	for i := 0; i < n; i++ {
-		state := worker.RandomState(t, a)
+		state := worker.RandomState(t, a, maxQuadWidth)
 		energy := state.Energy()
 		if i == 0 || energy < bestEnergy {
 			bestEnergy = energy
@@ -84,10 +84,10 @@ func (worker *Worker) BestRandomState(t ShapeType, a, n int) *State {
 	return bestState
 }
 
-func (worker *Worker) RandomState(t ShapeType, a int) *State {
+func (worker *Worker) RandomState(t ShapeType, a int, maxQuadWidth float64) *State {
 	switch t {
 	default:
-		return worker.RandomState(ShapeType(worker.Rnd.Intn(8)+1), a)
+		return worker.RandomState(ShapeType(worker.Rnd.Intn(8)+1), a, maxQuadWidth)
 	case ShapeTypeTriangle:
 		return NewState(worker, NewRandomTriangle(worker), a)
 	case ShapeTypeRectangle:
@@ -99,7 +99,7 @@ func (worker *Worker) RandomState(t ShapeType, a int) *State {
 	case ShapeTypeRotatedRectangle:
 		return NewState(worker, NewRandomRotatedRectangle(worker), a)
 	case ShapeTypeQuadratic:
-		return NewState(worker, NewRandomQuadratic(worker), a)
+		return NewState(worker, NewRandomQuadratic(worker, maxQuadWidth), a)
 	case ShapeTypeRotatedEllipse:
 		return NewState(worker, NewRandomRotatedEllipse(worker), a)
 	case ShapeTypePolygon:
