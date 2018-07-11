@@ -17,22 +17,23 @@ import (
 )
 
 var (
-	Input      string
-	InitImage  string
-	Outputs    flagArray
-	Background string
-	Configs    shapeConfigArray
-	Alpha      int
-	InputSize  int
-	OutputSize int
-	Mode       int
-	Workers    int
-	Max        float64
-	Maxpct     float64
-	rfs        float64
-	Nth        int
-	Repeat     int
-	V, VV      bool
+	Input        string
+	InitImage    string
+	Outputs      flagArray
+	Background   string
+	Configs      shapeConfigArray
+	Alpha        int
+	InputSize    int
+	OutputSize   int
+	MaxQuadWidth float64
+	Mode         int
+	Workers      int
+	Max          float64
+	Maxpct       float64
+	rfs          float64
+	Nth          int
+	Repeat       int
+	V, VV        bool
 )
 
 type flagArray []string
@@ -47,10 +48,11 @@ func (i *flagArray) Set(value string) error {
 }
 
 type shapeConfig struct {
-	Count  int
-	Mode   int
-	Alpha  int
-	Repeat int
+	Count        int
+	Mode         int
+	Alpha        int
+	Repeat       int
+	MaxQuadWidth float64
 }
 
 type shapeConfigArray []shapeConfig
@@ -61,7 +63,7 @@ func (i *shapeConfigArray) String() string {
 
 func (i *shapeConfigArray) Set(value string) error {
 	n, _ := strconv.ParseInt(value, 0, 0)
-	*i = append(*i, shapeConfig{int(n), Mode, Alpha, Repeat})
+	*i = append(*i, shapeConfig{int(n), Mode, Alpha, Repeat, MaxQuadWidth})
 	return nil
 }
 
@@ -75,6 +77,7 @@ func init() {
 	flag.IntVar(&InputSize, "r", 256, "resize large input images to this size only if larger than specified")
 	flag.IntVar(&OutputSize, "s", 1024, "output image size")
 	flag.IntVar(&Mode, "m", 1, "0=combo 1=triangle 2=rect 3=ellipse 4=circle 5=rotatedrect 6=beziers 7=rotatedellipse 8=polygon")
+	flag.Float64Var(&MaxQuadWidth, "mqw", 0.5, "maximum size of quadratic lines")
 	flag.IntVar(&Workers, "j", 0, "number of parallel workers (default uses all cores)")
 	flag.Float64Var(&Max, "ma", 0, "target score to stop adding primitives (default 0)")
 	flag.Float64Var(&Maxpct, "mp", 100, "target score in % to stop adding primitives (default 100)")
@@ -112,6 +115,7 @@ func main() {
 		Configs[0].Mode = Mode
 		Configs[0].Alpha = Alpha
 		Configs[0].Repeat = Repeat
+		Configs[0].MaxQuadWidth = MaxQuadWidth
 	}
 	for _, config := range Configs {
 		if config.Count < 1 {
@@ -178,7 +182,7 @@ func main() {
 
 			// find optimal shape and add it to the model
 			t := time.Now()
-			n := model.Step(primitive.ShapeType(config.Mode), config.Alpha, config.Repeat)
+			n := model.Step(primitive.ShapeType(config.Mode), config.Alpha, config.Repeat, config.MaxQuadWidth)
 			nps := primitive.NumberString(float64(n) / time.Since(t).Seconds())
 			elapsed := time.Since(start).Seconds()
 
