@@ -199,6 +199,9 @@ func main() {
 			// write output image(s)
 			for _, output := range Outputs {
 				ext := strings.ToLower(filepath.Ext(output))
+				if output == "-" {
+					ext = ".svg"
+				}
 				percent := strings.Contains(output, "%")
 				saveFrames := percent && ext != ".gif"
 				saveFrames = saveFrames && frame%Nth == 0
