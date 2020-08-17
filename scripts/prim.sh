@@ -1,10 +1,12 @@
-# Example: /prim.sh crayon2.jpg 1000 1024 1024 0 test.png
+# Example: /prim-mean.sh ber.jpg 2000 1024 2048 80 6 bertest
+filename=${1%.*}
 
-for i in {1..4}
+echo "prim.sh ${1} ${2} ${3} ${4} ${5} ${6}" > ${filename}-${5}-parms.txt
+
+for i in $( eval echo {1..${6}} )
 do
-  ~/go/bin/primitive -rep 30 -a 0 -m 0 -v -i $1 -n $2 -r $3 -s $4 -mp $5 -o $6-tmp$(date +%s).png
+  primitive -rep 10 -a 0 -i ${1} -m 0 -n ${2} -r ${3} -s ${4} -mp ${5} -v -o ${filename}-${5}-mean${6}-tmp$i.png
+  convert ${filename}-${5}-mean${6}-tmp*.png -average ${filename}-${5}-mean${6}.png
 done
 
-convert $6-tmp*.png -average $6-mean.png
-
-rm $6-tmp*.png
+rm ${filename}-${5}-mean${6}-tmp*.png
