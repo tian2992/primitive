@@ -1,8 +1,8 @@
 # Primitive Pictures
 
-Reproducing images with geometric primitives.
+Reproducing images with geometric primitives. Test
 
-![Example](https://www.michaelfogleman.com/static/primitive/examples/16550611738.200.128.4.5.png)
+![Example]()
 
 ### How it Works
 
@@ -27,7 +27,7 @@ You can tweet a picture to the bot and it will process it for you.
 
 Run it on your own images! First, [install Go](https://golang.org/doc/install).
 
-    go get -u github.com/fogleman/primitive
+    go get -u github.com/bmaltais/primitive
     primitive -i input.png -o output.png -n 100
 
 Small input images should be used (like 256x256px). You don't need the detail anyway and the code will run faster.
@@ -38,8 +38,10 @@ Small input images should be used (like 256x256px). You don't need the detail an
 | `o` | n/a | output file |
 | `n` | n/a | number of shapes |
 | `m` | 1 | mode: 0=combo, 1=triangle, 2=rect, 3=ellipse, 4=circle, 5=rotatedrect, 6=beziers, 7=rotatedellipse, 8=polygon |
+| `mqw` | 0.5 | maximum size of quadratic lines |
 | `rep` | 0 | add N extra shapes each iteration with reduced search (mostly good for beziers) |
 | `nth` | 1 | save every Nth frame (only when `%d` is in output path) |
+| `int` | 50 | interval between frame in a gif in millis (works only with .gif output)|
 | `r` | 256 | resize large input images to this size before processing |
 | `s` | 1024 | output image size |
 | `a` | 128 | color alpha (use `0` to let the algorithm choose alpha for each shape) |

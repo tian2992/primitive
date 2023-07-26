@@ -12,23 +12,29 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fogleman/primitive/primitive"
+	"github.com/bmaltais/primitive/primitive"
 	"github.com/nfnt/resize"
 )
 
 var (
-	Input      string
-	Outputs    flagArray
-	Background string
-	Configs    shapeConfigArray
-	Alpha      int
-	InputSize  int
-	OutputSize int
-	Mode       int
-	Workers    int
-	Nth        int
-	Repeat     int
-	V, VV      bool
+	Input        string
+	InitImage    string
+	Outputs      flagArray
+	Background   string
+	Configs      shapeConfigArray
+	Alpha        int
+	InputSize    int
+	OutputSize   int
+	MaxQuadWidth float64
+	Mode         int
+	Workers      int
+	Max          float64
+	Maxpct       float64
+	rfs          float64
+	Nth          int
+	Repeat       int
+	V, VV        bool
+	Interval     int
 )
 
 type flagArray []string
@@ -43,10 +49,11 @@ func (i *flagArray) Set(value string) error {
 }
 
 type shapeConfig struct {
-	Count  int
-	Mode   int
-	Alpha  int
-	Repeat int
+	Count        int
+	Mode         int
+	Alpha        int
+	Repeat       int
+	MaxQuadWidth float64
 }
 
 type shapeConfigArray []shapeConfig
@@ -57,20 +64,25 @@ func (i *shapeConfigArray) String() string {
 
 func (i *shapeConfigArray) Set(value string) error {
 	n, _ := strconv.ParseInt(value, 0, 0)
-	*i = append(*i, shapeConfig{int(n), Mode, Alpha, Repeat})
+	*i = append(*i, shapeConfig{int(n), Mode, Alpha, Repeat, MaxQuadWidth})
 	return nil
 }
 
 func init() {
 	flag.StringVar(&Input, "i", "", "input image path")
+	flag.StringVar(&InitImage, "ii", "", "init image image path")
 	flag.Var(&Outputs, "o", "output image path")
 	flag.Var(&Configs, "n", "number of primitives")
 	flag.StringVar(&Background, "bg", "", "background color (hex)")
 	flag.IntVar(&Alpha, "a", 128, "alpha value")
-	flag.IntVar(&InputSize, "r", 256, "resize large input images to this size")
+	flag.IntVar(&InputSize, "r", 256, "resize large input images to this size only if larger than specified")
 	flag.IntVar(&OutputSize, "s", 1024, "output image size")
 	flag.IntVar(&Mode, "m", 1, "0=combo 1=triangle 2=rect 3=ellipse 4=circle 5=rotatedrect 6=beziers 7=rotatedellipse 8=polygon")
+	flag.Float64Var(&MaxQuadWidth, "mqw", 0.5, "maximum size of quadratic lines")
+	flag.IntVar(&Interval, "int", 50, "interval between frame in a gif")
 	flag.IntVar(&Workers, "j", 0, "number of parallel workers (default uses all cores)")
+	flag.Float64Var(&Max, "ma", 0, "target score to stop adding primitives (default 0)")
+	flag.Float64Var(&Maxpct, "mp", 100, "target score in % to stop adding primitives (default 100)")
 	flag.IntVar(&Nth, "nth", 1, "save every Nth frame (put \"%d\" in path)")
 	flag.IntVar(&Repeat, "rep", 0, "add N extra shapes per iteration with reduced search")
 	flag.BoolVar(&V, "v", false, "verbose")
@@ -105,11 +117,15 @@ func main() {
 		Configs[0].Mode = Mode
 		Configs[0].Alpha = Alpha
 		Configs[0].Repeat = Repeat
+		Configs[0].MaxQuadWidth = MaxQuadWidth
 	}
 	for _, config := range Configs {
 		if config.Count < 1 {
 			ok = errorMessage("ERROR: number argument must be > 0")
 		}
+	}
+	if Interval < 0 {
+		ok = errorMessage("ERROR: negative frame interval not accepted")
 	}
 	if !ok {
 		fmt.Println("Usage: primitive [OPTIONS] -i input -o output -n count")
@@ -153,8 +169,13 @@ func main() {
 	}
 
 	// run algorithm
+	var startScore float64
+
 	model := primitive.NewModel(input, bg, OutputSize, Workers)
 	primitive.Log(1, "%d: t=%.3f, score=%.6f\n", 0, 0.0, model.Score)
+
+	startScore = model.Score
+
 	start := time.Now()
 	frame := 0
 	for j, config := range Configs {
@@ -166,10 +187,14 @@ func main() {
 
 			// find optimal shape and add it to the model
 			t := time.Now()
-			n := model.Step(primitive.ShapeType(config.Mode), config.Alpha, config.Repeat)
+			n := model.Step(primitive.ShapeType(config.Mode), config.Alpha, config.Repeat, config.MaxQuadWidth)
 			nps := primitive.NumberString(float64(n) / time.Since(t).Seconds())
 			elapsed := time.Since(start).Seconds()
-			primitive.Log(1, "%d: t=%.3f, score=%.6f, n=%d, n/s=%s\n", frame, elapsed, model.Score, n, nps)
+
+			var pctScore float64
+			pctScore = 100 - (model.Score / startScore * 100)
+
+			primitive.Log(1, "%d: t=%.3f, score=%.6f, n=%d, n/s=%s, percent score=%.3f%%\n", frame, elapsed, model.Score, n, nps, pctScore)
 
 			// write output image(s)
 			for _, output := range Outputs {
@@ -181,7 +206,7 @@ func main() {
 				saveFrames := percent && ext != ".gif"
 				saveFrames = saveFrames && frame%Nth == 0
 				last := j == len(Configs)-1 && i == config.Count-1
-				if saveFrames || last {
+				if saveFrames || last || model.Score <= Max || pctScore >= Maxpct {
 					path := output
 					if percent {
 						path = fmt.Sprintf(output, frame)
@@ -198,9 +223,12 @@ func main() {
 						check(primitive.SaveFile(path, model.SVG()))
 					case ".gif":
 						frames := model.Frames(0.001)
-						check(primitive.SaveGIFImageMagick(path, frames, 50, 250))
+						check(primitive.SaveGIFImageMagick(path, frames, Interval, 250))
 					}
 				}
+			}
+			if model.Score <= Max || pctScore >= Maxpct {
+				return
 			}
 		}
 	}
