@@ -4,31 +4,31 @@ Reproducing images with geometric primitives.
 
 ![Example](https://www.michaelfogleman.com/static/primitive/examples/16550611738.200.128.4.5.png)
 
+> **Note**: This is a fork of the original [primitive](https://github.com/fogleman/primitive) by [Michael Fogleman](https://github.com/fogleman). The original project is a fantastic piece of software that I have been using and loving for many years to generate header images for [my blog](https://loige.co). This fork aims to keep the project alive and compatible with recent versions of the Go compiler.
+
 ### How it Works
 
 A target image is provided as input. The algorithm tries to find the single most optimal shape that can be drawn to minimize the error between the target image and the drawn image. It repeats this process, adding *one shape at a time*. Around 50 to 200 shapes are needed to reach a result that is recognizable yet artistic and abstract.
-
-### Primitive for macOS
-
-Now available as a native Mac application!
-
-https://primitive.lol/
-
-### Twitter
-
-Follow [@PrimitivePic](https://twitter.com/PrimitivePic) on Twitter to see a new primitive picture every 30 minutes!
-
-The Twitter bot looks for interesting photos using the Flickr API, runs the algorithm using randomized parameters, and
-posts the picture using the Twitter API.
-
-You can tweet a picture to the bot and it will process it for you.
 
 ### Command-line Usage
 
 Run it on your own images! First, [install Go](https://golang.org/doc/install).
 
-    go get -u github.com/fogleman/primitive
-    primitive -i input.png -o output.png -n 100
+```bash
+# Install directly
+go install github.com/lmammino/primitive@latest
+
+# Or clone and build
+git clone https://github.com/lmammino/primitive.git
+cd primitive
+go build -o primitive_bin
+```
+
+Then run:
+
+```bash
+primitive -i input.png -o output.png -n 100
+```
 
 Small input images should be used (like 256x256px). You don't need the detail anyway and the code will run faster.
 
